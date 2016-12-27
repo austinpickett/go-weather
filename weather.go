@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"encoding/json"
+	"github.com/spf13/viper"
 )
 
 type BaseWeather struct {
@@ -31,14 +32,23 @@ type BaseWeather struct {
 }
 
 func main() {
-	API_KEY := "API_KEY"
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+	API_KEY := viper.GetString("API_KEY")
+	API_URL := viper.GetString("API_URL")
 
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Enter zipcode: ")
 	scanner.Scan()
 	zipcode := scanner.Text()
 
-	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?zip=%s&appid=%s&units=imperial", zipcode, API_KEY)
+	url := fmt.Sprintf("%s?zip=%s&appid=%s&units=imperial", API_URL, zipcode, API_KEY)
 
 	req, err := http.NewRequest("GET", url, nil)
 
