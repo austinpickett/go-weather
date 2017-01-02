@@ -1,13 +1,14 @@
 package main
 
 import (
-	"os"
-	"bufio"
+	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"log"
 	"net/http"
-	"encoding/json"
-	"github.com/spf13/viper"
+
+	"github.com/lxn/walk"
+	. "github.com/lxn/walk/declarative"
 )
 
 type BaseWeather struct {
@@ -16,17 +17,17 @@ type BaseWeather struct {
 		Lat float64 `json:"lat"`
 	} `json:"coord"`
 	Weather []struct {
-		ID 			int `json:"id"`
-		Main 		string `json:"main"`
+		ID          int    `json:"id"`
+		Main        string `json:"main"`
 		Description string `json:"description"`
-		Icon 		string `json:"icon"`
+		Icon        string `json:"icon"`
 	} `json:"weather"`
 	Main struct {
-		Temp 		float64 `json:"temp"`
-		Pressure 	int `json:"pressure"`
-		Humidity 	int `json:"humidity"`
-		TempMin 	float64 `json:"temp_min"`
-		TempMax 	float64 `json:"temp_max"`
+		Temp     float64 `json:"temp"`
+		Pressure int     `json:"pressure"`
+		Humidity int     `json:"humidity"`
+		TempMin  float64 `json:"temp_min"`
+		TempMax  float64 `json:"temp_max"`
 	} `json:"main"`
 	Name string `json:"name"`
 }
@@ -43,35 +44,53 @@ func main() {
 	API_KEY := viper.GetString("API_KEY")
 	API_URL := viper.GetString("API_URL")
 
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("Enter zipcode: ")
-	scanner.Scan()
-	zipcode := scanner.Text()
+	var inTE, outTE *walk.TextEdit
+	MainWindow{
+		Title:   "Weather App",
+		MinSize: Size{400, 200},
+		Layout:  VBox{},
+		Children: []Widget{
+			HSplitter{
+				Children: []Widget{
+					TextEdit{AssignTo: &inTE},
+					TextEdit{AssignTo: &outTE, ReadOnly: true},
+				},
+			},
+			PushButton{
+				Text: "Check Weather",
+				OnClicked: func() {
+					zipcode := inTE.Text()
 
-	url := fmt.Sprintf("%s?zip=%s&appid=%s&units=imperial", API_URL, zipcode, API_KEY)
+					url := fmt.Sprintf("%s?zip=%s&appid=%s&units=imperial", API_URL, zipcode, API_KEY)
 
-	req, err := http.NewRequest("GET", url, nil)
+					req, err := http.NewRequest("GET", url, nil)
 
-	if err != nil {
-		log.Fatal("NewRequest: ", err)
-		return
-	}
+					if err != nil {
+						log.Fatal("NewRequest: ", err)
+						return
+					}
 
-	client := &http.Client{}
+					client := &http.Client{}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal("Do: ", err)
-		return
-	}
+					resp, err := client.Do(req)
+					if err != nil {
+						log.Fatal("Do: ", err)
+						return
+					}
 
-	defer resp.Body.Close()
+					defer resp.Body.Close()
 
-	var record BaseWeather
+					var record BaseWeather
 
-	if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
-		log.Println(err)
-	}
+					if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
+						log.Println(err)
+					}
 
-	fmt.Println("Temperature: ", record.Main.Temp)
+					output := fmt.Sprintf("Temperature: %f", record.Main.Temp)
+
+					outTE.SetText(output)
+				},
+			},
+		},
+	}.Run()
 }

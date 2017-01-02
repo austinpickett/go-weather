@@ -1,10 +1,17 @@
 # GO-WEATHER
 
-Simple API call using go-lang
+Simple API call using go-lang, open weather map, and walk (Windows Application Library Kit)
+
+## Prerequisites:
+* Go: https://golang.org/dl/
+* API Key: http://openweathermap.org
+* Windows (the UI framework WALK)
 
 ## Usage:
-* Install Go: https://golang.org/dl/
-* Get an API key from OpenWeatherMap http://openweathermap.org
-* Replace "API_KEY" with one obtained from OWM
+* Replace "API_KEY" in config.json with one obtained from OWM
 * Run: go install <src file>
 * Run: %GOPATH%\bin\weather
+
+## Todo:
+* Code cleanup
+* GUI cleanup
